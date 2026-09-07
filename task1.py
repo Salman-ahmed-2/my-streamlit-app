@@ -4,14 +4,13 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Exploratory Data Analysis Interface", layout="wide")
 
-# ---------------- Sidebar: Dataset Controls ----------------
 st.sidebar.header("Dataset Controls")
 uploaded_file = st.sidebar.file_uploader("Upload CSV File for Analysis", type=["csv"])
 
 st.title("Exploratory Data Analysis Interface")
 
 if uploaded_file is not None:
-    # Validate that the uploaded file is a correctly formatted CSV
+   
     try:
         df = pd.read_csv(uploaded_file)
         if df.empty:
@@ -21,7 +20,7 @@ if uploaded_file is not None:
         st.error(f"Could not read the uploaded file as a CSV. Error: {e}")
         st.stop()
 
-    # ---------------- Dataset Preview & Metadata ----------------
+ 
     st.subheader("Dataset Preview & Metadata")
 
     st.write("First 5 Rows:")
@@ -50,15 +49,15 @@ if uploaded_file is not None:
     else:
         st.info("No numerical columns found in this dataset.")
 
-    # ---------------- Sidebar: Attribute Selection ----------------
+   
     st.sidebar.header("Attribute Selection")
     selected_column = st.sidebar.selectbox("Select Attribute for Visualization", df.columns)
 
-    # ---------------- Visualization Module ----------------
+   
     st.subheader("Visualization")
 
     if pd.api.types.is_numeric_dtype(df[selected_column]):
-        # Numerical -> Histogram
+       
         fig, ax = plt.subplots()
         ax.hist(df[selected_column].dropna(), bins=20, color="skyblue", edgecolor="black")
         ax.set_title(f"Histogram of {selected_column}")
@@ -66,7 +65,7 @@ if uploaded_file is not None:
         ax.set_ylabel("Frequency")
         st.pyplot(fig)
     else:
-        # Categorical -> Bar chart with frequency counts + percentage
+    
         counts = df[selected_column].value_counts()
         percentages = (counts / counts.sum() * 100).round(2)
 
