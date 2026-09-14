@@ -59,7 +59,7 @@ if uploaded_file is not None:
     if pd.api.types.is_numeric_dtype(df[selected_column]):
        
         fig, ax = plt.subplots()
-        ax.hist(df[selected_column].dropna(), bins=20, color="skyblue", edgecolor="black")
+        ax.hist(df[selected_column].dropna(), bins=20, color="red", edgecolor="blue")
         ax.set_title(f"Histogram of {selected_column}")
         ax.set_xlabel(selected_column)
         ax.set_ylabel("Frequency")
@@ -70,7 +70,7 @@ if uploaded_file is not None:
         percentages = (counts / counts.sum() * 100).round(2)
 
         fig, ax = plt.subplots()
-        bars = ax.bar(counts.index.astype(str), counts.values, color="salmon", edgecolor="black")
+        bars = ax.bar(counts.index.astype(str), counts.values, color="yellow", edgecolor="black")
         ax.set_title(f"Bar Chart of {selected_column}")
         ax.set_xlabel(selected_column)
         ax.set_ylabel("Frequency Count")
