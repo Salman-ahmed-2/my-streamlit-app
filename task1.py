@@ -1,87 +1,112 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-st.set_page_config(page_title="Exploratory Data Analysis Interface", layout="wide")
+st.set_page_config(page_title="Titanic Data Explorer", layout="wide")
 
-st.sidebar.header("Dataset Controls")
-uploaded_file = st.sidebar.file_uploader("Upload CSV File for Analysis", type=["csv"])
+st.markdown(
+    """
+    <style>
+        .main {
+            background: #f5f7fb;
+        }
+        .stApp {
+            color: #1f2937;
+        }
+        div[data-testid="stSidebar"] {
+            background: #111827;
+            color: white;
+        }
+        h1, h2, h3 {
+            color: #111827;
+        }
+        .block-container {
+            padding-top: 2rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("Exploratory Data Analysis Interface")
 
-if uploaded_file is not None:
-   
-    try:
-        df = pd.read_csv(uploaded_file)
-        if df.empty:
-            st.error("The uploaded file is empty. Please upload a valid CSV.")
-            st.stop()
-    except Exception as e:
-        st.error(f"Could not read the uploaded file as a CSV. Error: {e}")
-        st.stop()
+def load_data(uploaded_file):
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+        except Exception as e:
+            st.error(f"Could not read the uploaded file. Error: {e}")
+            return None
+        return df
 
- 
-    st.subheader("Dataset Preview & Metadata")
+    default_file = Path(__file__).with_name("Titanic-Dataset.csv")
+    if default_file.exists():
+        return pd.read_csv(default_file)
 
-    st.write("First 5 Rows:")
-    st.dataframe(df.head())
+    return None
 
-    st.write("Shape:", df.shape)
 
-    st.write("Column Data Types:")
-    dtypes_df = df.dtypes.astype(str).reset_index()
-    dtypes_df.columns = ["Column", "Data Type"]
-    st.dataframe(dtypes_df)
+with st.sidebar:
+    st.header("Controls")
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+    st.caption("If no file is uploaded, the app loads the Titanic dataset from the project folder.")
 
-    st.write("Missing Values per Column:")
-    missing_df = pd.DataFrame({
-        "Missing Count": df.isnull().sum(),
-        "Missing %": (df.isnull().sum() / len(df) * 100).round(2)
-    })
-    st.dataframe(missing_df)
+st.title("Titanic Data Explorer")
+st.caption("A simple dashboard for viewing a dataset and exploring a single column.")
 
-    st.write("Basic Statistical Summary (Numerical Attributes):")
-    numeric_df = df.select_dtypes(include="number")
-    if not numeric_df.empty:
-        summary = numeric_df.describe().loc[["mean", "50%", "min", "max"]]
-        summary = summary.rename(index={"50%": "median"})
-        st.dataframe(summary)
-    else:
-        st.info("No numerical columns found in this dataset.")
 
-   
-    st.sidebar.header("Attribute Selection")
-    selected_column = st.sidebar.selectbox("Select Attribute for Visualization", df.columns)
+df = load_data(uploaded_file)
 
-   
-    st.subheader("Visualization")
+if df is None:
+    st.info("Please upload a CSV file to start exploring.")
+    st.stop()
 
-    if pd.api.types.is_numeric_dtype(df[selected_column]):
-       
-        fig, ax = plt.subplots()
-        ax.hist(df[selected_column].dropna(), bins=20, color="red", edgecolor="blue")
-        ax.set_title(f"Histogram of {selected_column}")
-        ax.set_xlabel(selected_column)
-        ax.set_ylabel("Frequency")
-        st.pyplot(fig)
-    else:
-    
-        counts = df[selected_column].value_counts()
-        percentages = (counts / counts.sum() * 100).round(2)
+if df.empty:
+    st.warning("The uploaded CSV is empty.")
+    st.stop()
 
-        fig, ax = plt.subplots()
-        bars = ax.bar(counts.index.astype(str), counts.values, color="yellow", edgecolor="black")
-        ax.set_title(f"Bar Chart of {selected_column}")
-        ax.set_xlabel(selected_column)
-        ax.set_ylabel("Frequency Count")
-        plt.xticks(rotation=45, ha="right")
+st.subheader("Dataset overview")
+col1, col2, col3 = st.columns(3)
+col1.metric("Rows", df.shape[0])
+col2.metric("Columns", df.shape[1])
+col3.metric("Missing values", int(df.isnull().sum().sum()))
 
-        for bar, pct in zip(bars, percentages):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
-                    f"{pct}%", ha="center", va="bottom", fontsize=8)
+st.dataframe(df.head(10), use_container_width=True)
 
-        st.pyplot(fig)
+st.subheader("Column explorer")
+selected_column = st.selectbox("Choose a column", df.columns.tolist())
 
+if pd.api.types.is_numeric_dtype(df[selected_column]):
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.hist(df[selected_column].dropna(), bins=20, color="#4f46e5", edgecolor="black")
+    ax.set_title(f"Histogram: {selected_column}")
+    ax.set_xlabel(selected_column)
+    ax.set_ylabel("Frequency")
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    st.pyplot(fig)
 else:
-    st.info("Please upload a CSV file from the sidebar to begin analysis. "
-            "(Use the titanic.csv dataset to test this app.)")
+    counts = df[selected_column].fillna("Missing").value_counts()
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bars = ax.bar(counts.index.astype(str), counts.values, color="#f59e0b", edgecolor="black")
+    ax.set_title(f"Bar chart: {selected_column}")
+    ax.set_xlabel(selected_column)
+    ax.set_ylabel("Count")
+    ax.grid(axis="y", linestyle="--", alpha=0.3)
+
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            height + 0.3,
+            str(int(height)),
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
+
+    plt.xticks(rotation=30, ha="right")
+    st.pyplot(fig)
+
+st.subheader("Quick summary")
+summary = df.describe(include="all").T
+st.dataframe(summary, use_container_width=True)
