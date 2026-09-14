@@ -8,26 +8,16 @@ st.set_page_config(page_title="Titanic Data Explorer", layout="wide")
 st.markdown(
     """
     <style>
-        html, body, [data-testid="stAppViewContainer"], .main {
-            background-color: black;
-            color: white;
-        }
-        [data-testid="stSidebar"] {
-            background-color: black;
-            color: white;
-        }
-        .stApp {
-            color: white;
+        html, body, [data-testid="stAppViewContainer"], .main,
+        [data-testid="stSidebar"], .stDataFrame, .stTable {
+            background-color: white;
+            color: black;
         }
         h1, h2, h3, p, div, label, span {
-            color: white !important;
-        }
-        .stDataFrame, .stTable, .stMetric {
-            background-color: black;
-            color: white;
+            color: black !important;
         }
         .block-container {
-            padding-top: 2rem;
+            padding-top: 1rem;
         }
     </style>
     """,
